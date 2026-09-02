@@ -1,0 +1,10 @@
+{
+  "name": "open-igdownload",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A readable Manifest V3 Instagram media downloader.",
+  "scripts": {
+    "check": "node --check src/background.js && node --check src/content.js && node --check src/lib.js && node --check src/options-redirect.js && node --check src/page-bridge.js && node --check tests/browser-fixture-server.js && node --test",
+    "test": "node --test"
+  }
+}

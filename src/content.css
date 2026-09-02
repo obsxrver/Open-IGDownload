@@ -1,0 +1,399 @@
+:root {
+  --oig-accent: #0095f6;
+  --oig-surface: #ffffff;
+  --oig-surface-muted: #f5f5f5;
+  --oig-text: #1f1f1f;
+  --oig-border: rgba(0, 0, 0, 0.16);
+  --oig-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --oig-surface: #202020;
+    --oig-surface-muted: #2d2d2d;
+    --oig-text: #f5f5f5;
+    --oig-border: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.oig-icon-button {
+  align-items: center !important;
+  appearance: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  box-sizing: border-box !important;
+  color: inherit !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  height: 40px !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  min-width: 40px !important;
+  padding: 8px !important;
+  position: relative !important;
+  width: 40px !important;
+}
+
+.oig-icon-button:hover {
+  opacity: 0.58 !important;
+}
+
+.oig-icon-button:disabled {
+  cursor: wait !important;
+  opacity: 0.45 !important;
+}
+
+.oig-icon-button svg {
+  display: block !important;
+  fill: none !important;
+  height: 24px !important;
+  stroke: currentColor !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  stroke-width: 2 !important;
+  width: 24px !important;
+}
+
+.oig-post-button {
+  align-self: center !important;
+  flex: 0 0 32px !important;
+  height: 32px !important;
+  margin-right: 8px !important;
+  min-width: 32px !important;
+  padding: 4px !important;
+  width: 32px !important;
+}
+
+.oig-grid-owner,
+.oig-reel-owner,
+.oig-avatar-owner {
+  position: relative !important;
+}
+
+.oig-grid-button,
+.oig-reel-button,
+.oig-avatar-button {
+  background: rgba(0, 0, 0, 0.68) !important;
+  color: #fff !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  transition: opacity 120ms ease !important;
+  z-index: 50 !important;
+}
+
+.oig-grid-button {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.oig-reel-button {
+  bottom: 18px !important;
+  right: 18px !important;
+}
+
+.oig-avatar-button {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.oig-grid-owner:hover > .oig-grid-button,
+.oig-reel-owner:hover > .oig-reel-button,
+.oig-avatar-owner:hover > .oig-avatar-button {
+  opacity: 1 !important;
+}
+
+.oig-story-controls {
+  align-items: center !important;
+  display: flex !important;
+  gap: 6px !important;
+  position: fixed !important;
+  right: 88px !important;
+  top: 16px !important;
+  z-index: 2147483000 !important;
+}
+
+.oig-story-controls .oig-icon-button {
+  background: rgba(0, 0, 0, 0.56) !important;
+  color: #fff !important;
+}
+
+.oig-profile-menu {
+  display: inline-flex !important;
+  margin-left: 12px !important;
+  position: relative !important;
+  vertical-align: middle !important;
+  z-index: 30 !important;
+}
+
+.oig-profile-menu-trigger {
+  appearance: none !important;
+  background: var(--oig-surface-muted) !important;
+  border: 1px solid var(--oig-border) !important;
+  border-radius: 8px !important;
+  color: var(--oig-text) !important;
+  cursor: pointer !important;
+  font:
+    600 14px/18px system-ui,
+    sans-serif !important;
+  padding: 7px 12px !important;
+}
+
+.oig-profile-menu-list {
+  background: var(--oig-surface) !important;
+  border: 1px solid var(--oig-border) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--oig-shadow) !important;
+  display: none !important;
+  left: 0 !important;
+  min-width: 205px !important;
+  overflow: hidden !important;
+  padding: 5px !important;
+  position: absolute !important;
+  top: calc(100% + 7px) !important;
+}
+
+.oig-profile-menu.oig-open .oig-profile-menu-list {
+  display: block !important;
+}
+
+.oig-profile-menu-list button {
+  appearance: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  color: var(--oig-text) !important;
+  cursor: pointer !important;
+  display: block !important;
+  font:
+    400 14px/20px system-ui,
+    sans-serif !important;
+  padding: 9px 11px !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+.oig-profile-menu-list button:hover {
+  background: var(--oig-surface-muted) !important;
+}
+
+#oig-notifications {
+  bottom: 28px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  max-width: min(440px, calc(100vw - 32px)) !important;
+  pointer-events: none !important;
+  position: fixed !important;
+  right: 16px !important;
+  width: 100% !important;
+  z-index: 2147483646 !important;
+}
+
+.oig-notice {
+  background: var(--oig-surface) !important;
+  border: 1px solid var(--oig-border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--oig-shadow) !important;
+  box-sizing: border-box !important;
+  color: var(--oig-text) !important;
+  font:
+    500 14px/20px system-ui,
+    sans-serif !important;
+  opacity: 0 !important;
+  padding: 13px 42px 13px 15px !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  transform: translateY(8px) !important;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease !important;
+}
+
+.oig-notice.oig-visible {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+.oig-notice.oig-warn {
+  border-color: rgba(255, 167, 38, 0.72) !important;
+}
+
+.oig-notice.oig-error {
+  border-color: rgba(244, 67, 54, 0.72) !important;
+}
+
+.oig-notice-close {
+  appearance: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: inherit !important;
+  cursor: pointer !important;
+  font:
+    700 18px/20px system-ui,
+    sans-serif !important;
+  opacity: 0.7 !important;
+  padding: 9px !important;
+  position: absolute !important;
+  right: 2px !important;
+  top: 2px !important;
+}
+
+.oig-progress-track {
+  background: var(--oig-surface-muted) !important;
+  border-radius: 4px !important;
+  height: 5px !important;
+  margin-top: 10px !important;
+  overflow: hidden !important;
+  width: 100% !important;
+}
+
+.oig-progress-bar {
+  background: var(--oig-accent) !important;
+  height: 100% !important;
+  transition: width 160ms ease !important;
+  width: 0 !important;
+}
+
+#oig-options-root {
+  background: #080808 !important;
+  color: #f7f7f7 !important;
+  inset: 0 !important;
+  overflow: auto !important;
+  position: fixed !important;
+  z-index: 2147483647 !important;
+}
+
+.oig-options-shell {
+  box-sizing: border-box !important;
+  margin: 0 auto !important;
+  max-width: 760px !important;
+  padding: 56px 24px 80px !important;
+}
+
+.oig-options-header {
+  align-items: center !important;
+  display: flex !important;
+  gap: 14px !important;
+  margin-bottom: 28px !important;
+}
+
+.oig-options-logo {
+  align-items: center !important;
+  background: linear-gradient(135deg, #8a3ab9, #e95950, #fccc63) !important;
+  border-radius: 14px !important;
+  display: flex !important;
+  height: 50px !important;
+  justify-content: center !important;
+  width: 50px !important;
+}
+
+.oig-options-logo svg {
+  fill: none !important;
+  height: 28px !important;
+  stroke: #fff !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  stroke-width: 2 !important;
+  width: 28px !important;
+}
+
+.oig-options-header h1 {
+  font:
+    700 26px/32px system-ui,
+    sans-serif !important;
+  margin: 0 !important;
+}
+
+.oig-options-card {
+  background: #141414 !important;
+  border: 1px solid #292929 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+.oig-setting-row {
+  align-items: center !important;
+  display: flex !important;
+  gap: 20px !important;
+  justify-content: space-between !important;
+  padding: 20px !important;
+}
+
+.oig-setting-row + .oig-setting-row {
+  border-top: 1px solid #292929 !important;
+}
+
+.oig-setting-copy {
+  font:
+    400 14px/20px system-ui,
+    sans-serif !important;
+}
+
+.oig-setting-copy strong {
+  display: block !important;
+  font-size: 16px !important;
+  margin-bottom: 4px !important;
+}
+
+.oig-setting-copy span {
+  color: #b3b3b3 !important;
+}
+
+.oig-directory-name {
+  background: #262626 !important;
+  border-radius: 8px !important;
+  color: #e4e4e4 !important;
+  display: inline-block !important;
+  margin-top: 9px !important;
+  max-width: 420px !important;
+  overflow: hidden !important;
+  padding: 6px 9px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.oig-options-button {
+  appearance: none !important;
+  background: #333 !important;
+  border: 1px solid #505050 !important;
+  border-radius: 9px !important;
+  color: #fff !important;
+  cursor: pointer !important;
+  flex: 0 0 auto !important;
+  font:
+    650 14px/20px system-ui,
+    sans-serif !important;
+  padding: 8px 13px !important;
+}
+
+.oig-options-button:hover {
+  background: #444 !important;
+}
+
+.oig-options-footer {
+  color: #999 !important;
+  display: flex !important;
+  font:
+    400 13px/18px system-ui,
+    sans-serif !important;
+  justify-content: space-between !important;
+  margin-top: 18px !important;
+}
+
+.oig-options-footer a {
+  color: #b9ddff !important;
+}
+
+@media (max-width: 560px) {
+  .oig-setting-row {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .oig-options-button {
+    align-self: flex-start !important;
+  }
+}

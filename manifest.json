@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Open IGDownload",
+  "description": "Download Instagram photos, videos, carousels, Reels, Stories, and profile media.",
+  "version": "1.0.0",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": ["downloads", "storage"],
+  "host_permissions": [
+    "*://*.instagram.com/*",
+    "*://*.cdninstagram.com/*",
+    "*://*.cdninstagram.net/*",
+    "*://*.fbcdn.net/*"
+  ],
+  "action": {
+    "default_title": "Open IGDownload settings",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.instagram.com/*"],
+      "js": ["src/page-bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["*://*.instagram.com/*"],
+      "js": ["src/lib.js", "src/content.js"],
+      "css": ["src/content.css"],
+      "run_at": "document_start"
+    }
+  ]
+}
