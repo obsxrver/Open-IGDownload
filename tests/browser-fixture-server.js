@@ -11,7 +11,7 @@ const chromeMock = `
   <script>
     globalThis.chrome = {
       runtime: {
-        getManifest: () => ({ version: "1.0.0" }),
+        getManifest: () => ({ version: ${JSON.stringify(require("../manifest.json").version)} }),
         lastError: null,
         sendMessage: (_message, callback) => callback({ ok: true })
       },

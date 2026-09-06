@@ -128,7 +128,7 @@
     return element;
   }
 
-  function progressNotice(text) {
+  function progressNotice(text, { persistent = false } = {}) {
     const element = notice(text, "default", 0);
     const track = document.createElement("div");
     track.className = "oig-progress-track";
@@ -148,7 +148,7 @@
         bar.style.width = "100%";
         if (message)
           element.querySelector(".oig-notice-message").textContent = message;
-        setTimeout(() => removeNotice(element), 2_200);
+        if (!persistent) setTimeout(() => removeNotice(element), 2_200);
       },
       fail(message) {
         element.classList.add("oig-error");
@@ -207,12 +207,12 @@
     const candidates = [
       element,
       element?.closest?.(`[${MEDIA_ID_ATTRIBUTE}]`),
-      element?.querySelector?.(`[${MEDIA_ID_ATTRIBUTE}]`),
+      ...(element?.querySelectorAll?.(`[${MEDIA_ID_ATTRIBUTE}]`) || []),
     ];
     let id = null;
     for (const candidate of candidates) {
       const value = candidate?.getAttribute?.(MEDIA_ID_ATTRIBUTE);
-      const match = String(value || "").match(/^(\d+)/);
+      const match = String(value || "").match(/^([1-9]\d*)(?:_\d+)?$/);
       if (match) {
         id = match[1];
         break;
@@ -229,7 +229,9 @@
       (Core.routeFor(location.href) === "post"
         ? Core.shortcodeFromUrl(location.href)
         : null);
-    return { id: id || Core.shortcodeToMediaId(shortcode), shortcode };
+    // A permalink identifies the parent post; React annotations can be a
+    // carousel child, an unrelated component ID, or a list index such as 0.
+    return { id: Core.shortcodeToMediaId(shortcode) || id, shortcode };
   }
 
   function usernameFromElement(element) {
@@ -272,11 +274,24 @@
     let { id, shortcode } = mediaIdentity(element);
     if (!shortcode && id) shortcode = Core.mediaIdToShortcode(id);
     let lastError = null;
+    const container = element?.closest?.("article") || element;
+    let expectedCount = carouselItemCount(container);
+    const completeItems = (media) => {
+      expectedCount = Math.max(
+        expectedCount,
+        Number(media?.carousel_media_count) || 0,
+        media?.carousel_media?.length || 0,
+        media?.edge_sidecar_to_children?.edges?.length || 0,
+        media?.media_type === 8 || media?.__typename === "GraphSidecar" ? 2 : 1,
+      );
+      const items = Core.normalizeApiMedia(media);
+      return items.length >= expectedCount ? items : [];
+    };
 
     if (id) {
       try {
         const response = await instagramJson(`/api/v1/media/${id}/info/`);
-        const items = Core.normalizeApiMedia(response?.items?.[0]);
+        const items = completeItems(response?.items?.[0]);
         if (items.length)
           return index == null ? items : items.slice(index, index + 1);
       } catch (error) {
@@ -287,7 +302,7 @@
     if (shortcode) {
       try {
         const media = await bridge("load-post", { shortcode });
-        const items = Core.normalizeApiMedia(media);
+        const items = completeItems(media);
         if (items.length)
           return index == null ? items : items.slice(index, index + 1);
       } catch (error) {
@@ -295,6 +310,9 @@
       }
     }
 
+    if (expectedCount > 1) {
+      throw new Error("Could not load all carousel media. Open the post and try again.");
+    }
     const fallback = domMediaFallback(element);
     if (fallback.length) return fallback;
     throw lastError || new Error("Could not find media for this post");
@@ -366,6 +384,17 @@
     });
   }
 
+  function carouselItemCount(container) {
+    if (!container?.querySelectorAll) return 1;
+    const dots = container.querySelectorAll(
+      "._acnb, [role='tab'], button[aria-label^='Go to slide ']",
+    );
+    const slideNumbers = [...dots].map((dot) =>
+      Number(dot.getAttribute("aria-label")?.match(/^Go to slide (\d+)$/)?.[1]) || 0,
+    );
+    return Math.max(1, dots.length, ...slideNumbers, carouselSlides(container).length);
+  }
+
   function addPostButtons() {
     document.querySelectorAll("article").forEach((article) => {
       const control = moreOptionsControl(article);
@@ -374,9 +403,7 @@
         headerControls &&
         !headerControls.querySelector(":scope > .oig-post-button")
       ) {
-        const hasCarousel =
-          article.querySelectorAll("._acnb, [role='tab']").length > 1 ||
-          carouselSlides(article).length > 1;
+        const hasCarousel = carouselItemCount(article) > 1;
         const button = createIconButton(
           hasCarousel
             ? "Download all media in this post"
@@ -499,6 +526,9 @@
       account = {
         ...account,
         ...timeline.account,
+        // Historical posts can still carry an older owner username.
+        // Keep the export folder tied to the profile being downloaded.
+        username,
         totalPosts: account.totalPosts,
       };
       postCount += timeline.postCount;
@@ -581,7 +611,9 @@
 
   async function downloadProfile(username, type, root) {
     if (!root) return;
-    const progress = progressNotice(`Finding ${username}'s media…`);
+    const progress = progressNotice(`Finding ${username}'s media…`, {
+      persistent: true,
+    });
     try {
       const { account, items: allItems } = await collectProfileMedia(
         username,

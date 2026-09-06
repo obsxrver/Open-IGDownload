@@ -1,6 +1,6 @@
-# Open IGDownload
+# Open IGDownload - Downloader for Instagram
 
-Open IGDownload adds simple download controls to Instagram in your browser. Save individual photos, videos, Reels, Stories, carousels, or export the images or videos from a profile.
+Open IGDownload is an Instagram downloader extension that adds simple download controls directly to the site. Save individual photos, videos, Reels, Stories, carousels, or export the images or videos from a profile.
 
 Unlike many similar download extensions and services, Open IGDownload has **no tracking analytics or crash-reporting telemetry**. It does not collect or send usage data.
 
@@ -18,7 +18,9 @@ Open IGDownload shows discovery, queue, and export progress directly on the Inst
 
 ## Install
 
-Open IGDownload is installed manually as an unpacked extension. It works with Chrome, Edge, and other Chromium-based browsers that support Manifest V3.
+Install Open IGDownload from the [Chrome Web Store](https://chromewebstore.google.com/detail/open-igdownload-downloade/hchdkeahjmpahjkncgboenfpgllhnfem).
+
+You can also install it manually as an unpacked extension in Chrome, Edge, and other Chromium-based browsers that support Manifest V3:
 
 1. Download this repository:
    - On GitHub, select **Code** → **Download ZIP**, or download a packaged release ZIP if one is available.
@@ -81,7 +83,7 @@ Selected profile-folder access is handled by the browser's File System Access AP
 
 ## Update or remove
 
-To update, replace the extracted extension files with the newer version, return to the browser's extensions page, and select **Reload** on Open IGDownload.
+Chrome Web Store installations update automatically. For unpacked installations, replace the extracted extension files with the newer version, return to the browser's extensions page, and select **Reload** on Open IGDownload.
 
 To remove it, select **Remove** on the same extensions page. Downloaded media is not deleted when the extension is removed.
 

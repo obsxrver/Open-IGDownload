@@ -22,7 +22,7 @@
   });
 
   function numericMediaId(value) {
-    const match = String(value || "").match(/^(\d+)(?:_\d+)?$/);
+    const match = String(value || "").match(/^([1-9]\d*)(?:_\d+)?$/);
     return match ? match[1] : null;
   }
 
