@@ -254,7 +254,7 @@
   background: var(--oig-accent) !important;
   height: 100% !important;
   transition: width 160ms ease !important;
-  width: 0 !important;
+  width: var(--oig-progress, 0%) !important;
 }
 
 #oig-options-root {

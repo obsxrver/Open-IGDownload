@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Open IGDownload - Downloader for Instagram",
-  "description": "Instagram downloader for photos, videos, carousels, Reels, Stories, and profile media.",
-  "version": "1.0.2",
+  "description": "Safe, fast, and free download tool for Instagram. Download any post, story, reel, or full profile with just one click.",
+  "version": "1.1.0",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",

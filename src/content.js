@@ -140,12 +140,12 @@
       update(completed, total, message) {
         const percent =
           total > 0 ? Math.min(100, (completed / total) * 100) : 0;
-        bar.style.width = `${percent}%`;
+        bar.style.setProperty("--oig-progress", `${percent}%`);
         if (message)
           element.querySelector(".oig-notice-message").textContent = message;
       },
       finish(message) {
-        bar.style.width = "100%";
+        bar.style.setProperty("--oig-progress", "100%");
         if (message)
           element.querySelector(".oig-notice-message").textContent = message;
         if (!persistent) setTimeout(() => removeNotice(element), 2_200);
@@ -517,6 +517,8 @@
     let after = null;
     let page = 0;
     let postCount = 0;
+    let photoCount = 0;
+    let videoCount = 0;
     do {
       const response = await bridge("profile-timeline", { username, after });
       const timeline = Core.normalizeProfileTimelinePage(response, username);
@@ -537,13 +539,15 @@
         if (!seen.has(key)) {
           seen.add(key);
           items.push(item);
+          if (item.mediaType === "video") videoCount += 1;
+          else photoCount += 1;
         }
       }
       page += 1;
       progress.update(
         Math.min(postCount, account.totalPosts),
         account.totalPosts,
-        `Finding ${account.username}'s media… ${items.length.toLocaleString()}`,
+        `Finding ${account.username}'s media… ${items.length.toLocaleString()} (${photoCount.toLocaleString()} photos ${videoCount.toLocaleString()} videos)`,
       );
       const next = timeline.pageInfo.hasNextPage
         ? timeline.pageInfo.endCursor
@@ -619,10 +623,12 @@
         username,
         progress,
       );
-      const items = allItems.filter((item) => item.mediaType === type);
+      const items = type === "all"
+        ? allItems
+        : allItems.filter((item) => item.mediaType === type);
       if (!items.length) {
         progress.fail(
-          `No ${type === "video" ? "videos" : "images"} found for ${username}.`,
+          `No ${type === "all" ? "photos or videos" : type === "video" ? "videos" : "images"} found for ${username}.`,
         );
         return;
       }
@@ -662,7 +668,8 @@
     list.className = "oig-profile-menu-list";
 
     for (const [label, type] of [
-      ["Download All Images", "image"],
+      ["Download All Photos and Videos", "all"],
+      ["Download All Photos", "image"],
       ["Download All Videos", "video"],
     ]) {
       const item = document.createElement("button");
