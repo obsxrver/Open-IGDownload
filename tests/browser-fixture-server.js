@@ -11,6 +11,7 @@ const chromeMock = `
   <script>
     globalThis.chrome = {
       runtime: {
+        getURL: (resource) => '/' + resource,
         getManifest: () => ({ version: ${JSON.stringify(require("../manifest.json").version)} }),
         lastError: null,
         sendMessage: (_message, callback) => callback({ ok: true })
@@ -87,6 +88,11 @@ function fixture(pathname) {
 http
   .createServer((request, response) => {
     const url = new URL(request.url, `http://${request.headers.host}`);
+    if (url.pathname === "/icons/icon-48.png") {
+      response.writeHead(200, { "content-type": "image/png" });
+      fs.createReadStream(path.join(root, "icons/icon-48.png")).pipe(response);
+      return;
+    }
     if (url.pathname.startsWith("/src/")) {
       const filename = path.join(root, url.pathname);
       if (

@@ -55,6 +55,80 @@
   width: 24px !important;
 }
 
+.oig-settings-owner {
+  align-items: center !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  column-gap: 4px !important;
+}
+
+.oig-settings-button {
+  flex: 0 0 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  padding: 4px !important;
+  width: 32px !important;
+}
+
+.oig-settings-button:focus-visible {
+  outline: 2px solid var(--oig-accent) !important;
+  outline-offset: 2px !important;
+}
+
+.oig-settings-button img {
+  display: block !important;
+  height: 24px !important;
+  width: 24px !important;
+  object-fit: contain !important;
+}
+
+.oig-settings-button:hover,
+.oig-settings-button:focus-visible {
+  opacity: 1 !important;
+  z-index: 100 !important;
+}
+
+.oig-settings-label {
+  display: none !important;
+  opacity: 0 !important;
+  white-space: nowrap !important;
+  font: 400 16px/20px system-ui, sans-serif !important;
+  color: inherit !important;
+  margin-left: 16px !important;
+}
+
+.oig-settings-nav-owner:hover .oig-settings-label,
+.oig-settings-nav-owner:has(.oig-profile-nav-label[style*="display: flex"]) .oig-settings-label,
+.oig-settings-nav-button:focus-visible .oig-settings-label {
+  display: flex !important;
+  opacity: 1 !important;
+}
+
+.oig-settings-nav-button > img {
+  flex: 0 0 24px !important;
+}
+.oig-settings-nav-button {
+  border-radius: 8px !important;
+  height: 48px !important;
+  width: 100% !important;
+  min-width: 48px !important;
+  justify-content: flex-start !important;
+  margin: 4px 0 !important;
+  padding: 12px !important;
+}
+
+.oig-settings-nav-button:hover {
+  background: var(--oig-surface-muted) !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 767px) {
+  .oig-settings-nav-row {
+    display: none !important;
+  }
+}
+
 .oig-post-button {
   align-self: center !important;
   flex: 0 0 32px !important;
@@ -281,23 +355,12 @@
 }
 
 .oig-options-logo {
-  align-items: center !important;
-  background: linear-gradient(135deg, #8a3ab9, #e95950, #fccc63) !important;
   border-radius: 14px !important;
-  display: flex !important;
+  display: block !important;
+  flex: 0 0 50px !important;
   height: 50px !important;
-  justify-content: center !important;
+  object-fit: contain !important;
   width: 50px !important;
-}
-
-.oig-options-logo svg {
-  fill: none !important;
-  height: 28px !important;
-  stroke: #fff !important;
-  stroke-linecap: round !important;
-  stroke-linejoin: round !important;
-  stroke-width: 2 !important;
-  width: 28px !important;
 }
 
 .oig-options-header h1 {
@@ -340,6 +403,20 @@
 
 .oig-setting-copy span {
   color: #b3b3b3 !important;
+}
+
+.oig-setting-status:not(:empty) {
+  margin-top: 10px !important;
+  color: #b3b3b3 !important;
+}
+
+.oig-setting-status.oig-setting-error {
+  color: #ff9b9b !important;
+}
+
+.oig-options-button:disabled {
+  cursor: wait !important;
+  opacity: 0.6 !important;
 }
 
 .oig-directory-name {

@@ -58,7 +58,7 @@ Open IGDownload creates a separate folder for each profile inside the selected l
 
 ### Choose the profile download folder
 
-Select Open IGDownload in the browser toolbar to open the settings page, then select **Choose folder**. The settings page opens on `instagram.com` so the browser can safely remember the folder permission needed for profile exports.
+Select the extension icon below **Profile** in the landscape sidebar or beside the Instagram logo in portrait view (hover for **IGDownload**), or select Open IGDownload in the browser toolbar, to open the settings page, then select **Choose folder**. The settings page opens on `instagram.com` so the browser can safely remember the folder permission needed for profile exports.
 
 ![Open IGDownload settings with the profile download folder selector](docs/screenshots/settings.png)
 

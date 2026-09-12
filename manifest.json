@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Open IGDownload - Downloader for Instagram",
-  "description": "Safe, fast, and free download tool for Instagram. Download any post, story, reel, or full profile with just one click.",
-  "version": "1.1.0",
+  "description": "Fast and open-source download tool for Instagram. Download any post, story, reel, or full profile with one click.",
+  "version": "1.1.1",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -24,6 +24,12 @@
     }
   },
   "options_page": "options.html",
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/icon-48.png"],
+      "matches": ["*://*.instagram.com/*"]
+    }
+  ],
   "background": {
     "service_worker": "src/background.js"
   },

@@ -93,6 +93,68 @@
     return button;
   }
 
+  function createSettingsButton(className = "") {
+    const button = createIconButton("Open IGDownload settings", {
+      className: `oig-settings-button ${className}`,
+    });
+    button.title = "IGDownload";
+    const icon = document.createElement("img");
+    icon.src = chrome.runtime.getURL("icons/icon-48.png");
+    icon.alt = "";
+    icon.width = 24;
+    icon.height = 24;
+    const label = document.createElement("span");
+    label.className = "oig-settings-label";
+    label.textContent = "IGDownload";
+    button.replaceChildren(icon, label);
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      location.assign("https://www.instagram.com/#__open_igdownload_options");
+    });
+    return button;
+  }
+
+  function addSettingsButtons() {
+    document.querySelectorAll('h1 svg[aria-label="Instagram"]').forEach((logo) => {
+      // Keep the portrait button outside the feed menu's clickable element.
+      const owner = logo.closest("h1");
+      if (owner.querySelector(":scope > .oig-settings-button")) return;
+      owner.classList.add("oig-settings-owner");
+      owner.appendChild(createSettingsButton());
+    });
+
+    document.querySelectorAll('svg[aria-label="Home"]').forEach((home) => {
+      // Find the shared navigation list, then its top-level Profile row.
+      // This avoids depending on Instagram's generated classes or username.
+      let list = home.closest("a")?.parentElement;
+      while (list && list !== document.body) {
+        const profile = [...list.querySelectorAll("a[href]")].find((link) =>
+          link.querySelector('img[alt$="profile picture"]') &&
+          link.textContent.trim() === "Profile",
+        );
+        if (profile) {
+          list.classList.add("oig-settings-nav-owner");
+          // Instagram changes this label's inline display when its rail expands.
+          const profileLabel = [...profile.querySelectorAll("div[style]")].find(
+            (element) => element.style.display && element.textContent.trim() === "Profile",
+          );
+          profileLabel?.classList.add("oig-profile-nav-label");
+          let row = profile;
+          while (row.parentElement !== list) row = row.parentElement;
+          if (!list.querySelector(":scope > .oig-settings-nav-row")) {
+            const settingsRow = document.createElement("div");
+            settingsRow.className = "oig-settings-nav-row";
+            settingsRow.appendChild(createSettingsButton("oig-settings-nav-button"));
+            row.after(settingsRow);
+          }
+          break;
+        }
+        list = list.parentElement;
+      }
+    });
+  }
+
   function notificationsRoot() {
     let root = document.getElementById("oig-notifications");
     if (!root) {
@@ -465,9 +527,9 @@
     });
   }
 
-  async function acquireDirectory() {
+  async function acquireDirectory({ chooseNew = false } = {}) {
     try {
-      if (state.directoryHandle?.kind === "directory") {
+      if (!chooseNew && state.directoryHandle?.kind === "directory") {
         const permission = state.directoryHandle.requestPermission
           ? await state.directoryHandle.requestPermission({ mode: "readwrite" })
           : "granted";
@@ -483,8 +545,8 @@
         mode: "readwrite",
         startIn: "downloads",
       });
-      state.directoryHandle = handle;
       await Core.idbSet(DIRECTORY_KEY, handle);
+      state.directoryHandle = handle;
       return handle;
     } catch (error) {
       if (error?.name === "AbortError") return null;
@@ -834,6 +896,7 @@
       return;
     }
     removeRouteSpecificControls();
+    addSettingsButtons();
     addPostButtons();
     addGridButtons();
     addReelButtons();
@@ -899,13 +962,23 @@
     );
   }
 
-  async function chooseOptionsDirectory(button, nameElement) {
-    await runButtonTask(button, async () => {
-      const handle = await acquireDirectory();
+  async function chooseOptionsDirectory(button, nameElement, statusElement) {
+    if (button.disabled) return;
+    button.disabled = true;
+    statusElement.textContent = "";
+    statusElement.classList.remove("oig-setting-error");
+    try {
+      // Invoke the picker directly from the click, even with a saved folder.
+      const handle = await acquireDirectory({ chooseNew: true });
       if (!handle) return;
       nameElement.textContent = `📁 ${handle.name}`;
-      notice("Download folder updated.");
-    });
+      statusElement.textContent = "Download folder saved.";
+    } catch (error) {
+      statusElement.classList.add("oig-setting-error");
+      statusElement.textContent = error?.message || "Could not choose a folder. Try again.";
+    } finally {
+      button.disabled = false;
+    }
   }
 
   async function renderOptions() {
@@ -918,15 +991,16 @@
     root.innerHTML = `
       <main class="oig-options-shell">
         <header class="oig-options-header">
-          <div class="oig-options-logo">${singleDownloadIcon}</div>
+          <img class="oig-options-logo" src="${chrome.runtime.getURL("icons/icon-48.png")}" alt="" width="50" height="50">
           <div><h1>Open IGDownload</h1></div>
         </header>
         <section class="oig-options-card" aria-label="Settings">
           <div class="oig-setting-row">
             <div class="oig-setting-copy">
               <strong>Profile download folder</strong>
-              <span>Each profile gets its own folder inside this location.</span><br />
+              <span>Choose where to save profile downloads.</span><br />
               <span class="oig-directory-name"></span>
+              <div class="oig-setting-status" role="status" aria-live="polite"></div>
             </div>
             <button type="button" class="oig-options-button oig-choose-directory">Choose folder</button>
           </div>
@@ -943,8 +1017,9 @@
       ? `📁 ${state.directoryHandle.name}`
       : "Folder not set";
     const chooseButton = root.querySelector(".oig-choose-directory");
+    const statusElement = root.querySelector(".oig-setting-status");
     chooseButton.addEventListener("click", () =>
-      chooseOptionsDirectory(chooseButton, directoryName),
+      chooseOptionsDirectory(chooseButton, directoryName, statusElement),
     );
 
     root.querySelector(".oig-options-version").textContent =
