@@ -10,6 +10,11 @@
   const MEDIA_ID_ATTRIBUTE = "data-open-igdownload-media-id";
   const DIRECTORY_KEY = "download-directory-handle";
   const DEFAULT_APP_ID = "936619743392459";
+  const GRID_LINK_SELECTOR =
+    "a[href*='/p/'], a[href*='/reel/'], a[href*='/tv/']";
+  const PROFILE_ROW_SELECTOR = "._ac7v";
+  const EXTENSION_UI_SELECTOR =
+    ".oig-icon-button, .oig-settings-nav-row, .oig-profile-menu, .oig-story-controls, #oig-notifications, #oig-options-root";
   const SLIDE_SELECTOR =
     "li.x972fbf.x10w94by.x1qhh985.x14e42zd.xln7xf2.xk390pu.x5yr21d, li:has(> div img), li:has(> div video)";
 
@@ -18,6 +23,8 @@
     observer: null,
     refreshTimer: null,
     route: null,
+    profileGrid: null,
+    profileGridObserver: null,
   };
 
   const singleDownloadIcon = `
@@ -482,9 +489,12 @@
     });
   }
 
-  function addGridButtons() {
-    const anchors = document.querySelectorAll(
-      "main a[href*='/p/'], main a[href*='/reel/'], main a[href*='/tv/']",
+  function addGridButtons(root = document) {
+    if (!root) return;
+    const anchors = root.querySelectorAll(
+      root === document
+        ? "main a[href*='/p/'], main a[href*='/reel/'], main a[href*='/tv/']"
+        : GRID_LINK_SELECTOR,
     );
     anchors.forEach((anchor) => {
       if (
@@ -507,6 +517,48 @@
       });
       anchor.appendChild(button);
     });
+  }
+
+  function disconnectProfileGrid() {
+    state.profileGridObserver?.disconnect();
+    state.profileGridObserver = null;
+    state.profileGrid = null;
+  }
+
+  function observeProfileGrid() {
+    if (state.route !== "profile") {
+      disconnectProfileGrid();
+      return false;
+    }
+    if (state.profileGrid?.isConnected) return true;
+    disconnectProfileGrid();
+
+    // The virtualizer mounts and unmounts entire rows under this parent.
+    const row = document.querySelector(`main ${PROFILE_ROW_SELECTOR}`);
+    if (!row) return false;
+    state.profileGrid = row.parentElement;
+    state.profileGridObserver = new MutationObserver((records) => {
+      if (Core.routeFor(location.href) !== "profile") return;
+      const rows = new Set();
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (
+            node instanceof Element &&
+            node.matches(PROFILE_ROW_SELECTOR) &&
+            node.isConnected &&
+            node.parentElement === state.profileGrid
+          ) {
+            rows.add(node);
+          }
+        }
+      }
+      rows.forEach(addGridButtons);
+    });
+    state.profileGridObserver.observe(state.profileGrid, { childList: true });
+    for (const child of state.profileGrid.children) {
+      if (child.matches(PROFILE_ROW_SELECTOR)) addGridButtons(child);
+    }
+    return true;
   }
 
   function addReelButtons() {
@@ -891,6 +943,7 @@
 
   function refreshControls() {
     state.route = Core.routeFor(location.href);
+    const observesProfileGrid = observeProfileGrid();
     if (state.route === "options") {
       if (!document.getElementById("oig-options-root")) renderOptions();
       return;
@@ -898,7 +951,7 @@
     removeRouteSpecificControls();
     addSettingsButtons();
     addPostButtons();
-    addGridButtons();
+    if (!observesProfileGrid) addGridButtons();
     addReelButtons();
     addProfileMenu();
     addProfilePictureButton();
@@ -916,7 +969,42 @@
   }
 
   function installObserver() {
-    state.observer = new MutationObserver(scheduleRefresh);
+    state.observer = new MutationObserver((records) => {
+      let needsRefresh = false;
+      const rows = new Set();
+      for (const record of records) {
+        if (
+          record.target instanceof Element &&
+          record.target.closest(EXTENSION_UI_SELECTOR)
+        ) {
+          continue;
+        }
+        const nodes = [...record.addedNodes, ...record.removedNodes];
+        if (nodes.length && nodes.every((node) =>
+          node instanceof Element && node.matches(EXTENSION_UI_SELECTOR),
+        )) {
+          continue;
+        }
+        if (state.profileGrid?.isConnected && state.profileGrid.contains(record.target)) {
+          // Direct row insertions are handled by the grid observer. If a row
+          // mounts before its media, decorate only that row when media arrives.
+          const row = record.target.closest?.(PROFILE_ROW_SELECTOR);
+          if (row && [...record.addedNodes].some((node) =>
+            node instanceof Element &&
+            (node.matches(`img, video, ${GRID_LINK_SELECTOR}`) ||
+              node.querySelector(`img, video, ${GRID_LINK_SELECTOR}`)),
+          )) {
+            rows.add(row);
+          }
+          continue;
+        }
+        needsRefresh = true;
+      }
+      for (const row of rows) {
+        if (row.isConnected) addGridButtons(row);
+      }
+      if (needsRefresh) scheduleRefresh();
+    });
     state.observer.observe(document.body, { childList: true, subtree: true });
   }
 

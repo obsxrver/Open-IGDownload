@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Open IGDownload - Downloader for Instagram",
   "description": "Fast and open-source download tool for Instagram. Download any post, story, reel, or full profile with one click.",
-  "version": "1.1.1",
+  "version": "1.1.3",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",

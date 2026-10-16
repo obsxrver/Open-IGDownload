@@ -8,6 +8,8 @@
   const MEDIA_ID_ATTRIBUTE = "data-open-igdownload-media-id";
   const NAVIGATION_EVENT = "open-igdownload:navigation";
   const DEFAULT_APP_ID = "936619743392459";
+  const PERMALINK_SELECTOR =
+    "a[href*='/p/'], a[href*='/reel/'], a[href*='/tv/']";
   const PROFILE_TIMELINE_FIELD =
     "xdt_api__v1__feed__user_timeline_graphql_connection";
   const PROFILE_QUERY = Object.freeze({
@@ -86,7 +88,8 @@
   function annotateElement(element) {
     if (
       !(element instanceof Element) ||
-      element.hasAttribute(MEDIA_ID_ATTRIBUTE)
+      element.hasAttribute(MEDIA_ID_ATTRIBUTE) ||
+      element.closest(PERMALINK_SELECTOR)
     ) {
       return;
     }
@@ -103,6 +106,9 @@
 
   function annotateSubtree(root) {
     if (!(root instanceof Element)) return;
+    // Profile rows already identify each post by permalink. Avoid walking
+    // their thumbnails' React fibers every time the virtualizer mounts a row.
+    if (root.closest("._ac7v") || root.closest(PERMALINK_SELECTOR)) return;
     if (
       root.matches("article, a[href*='/p/'], a[href*='/reel/'], img, video")
     ) {
@@ -194,6 +200,8 @@
       __relay_internal__pv__PolarisMultiCaptionCarouselEnabledrelayprovider:
         true,
       __relay_internal__pv__PolarisShortDramaEnabledrelayprovider: false,
+      __relay_internal__pv__PolarisThreadsStyleCommentsEnabledrelayprovider:
+        false,
       __relay_internal__pv__PolarisReelsRecoDebugOverlayEnabledrelayprovider:
         false,
     };
@@ -275,10 +283,12 @@
       throw new Error(`Instagram request failed (${response.status})`);
     }
     const result = await response.json();
-    const error = result?.errors?.[0]?.message;
-    if (error) throw new Error(error);
+    // GraphQL can return usable media alongside errors in unrelated fields.
     if (!result?.data?.[PROFILE_TIMELINE_FIELD]) {
-      throw new Error("Instagram returned no profile timeline data");
+      throw new Error(
+        result?.errors?.[0]?.message ||
+          "Instagram returned no profile timeline data",
+      );
     }
     return result;
   }
