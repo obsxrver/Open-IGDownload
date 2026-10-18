@@ -291,6 +291,138 @@
   transform: translateY(0) !important;
 }
 
+.oig-review-prompt {
+  --oig-review-bg: #fff;
+  --oig-review-footer: #faf9fc;
+  --oig-review-text: #252330;
+  --oig-review-muted: #6b6779;
+  --oig-review-border: #e9e6ef;
+  background: var(--oig-review-bg) !important;
+  border: 1px solid var(--oig-review-border) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 24px 80px #0004, 0 4px 16px #0002 !important;
+  box-sizing: border-box !important;
+  color: var(--oig-review-text) !important;
+  font: 400 15px/25px system-ui, sans-serif !important;
+  inset: 0 !important;
+  margin: auto !important;
+  max-height: calc(100dvh - 32px) !important;
+  overflow: auto !important;
+  padding: 0 !important;
+  text-align: left !important;
+  width: min(520px, calc(100vw - 32px)) !important;
+}
+
+.oig-review-prompt::backdrop {
+  background: rgba(12, 10, 20, 0.58);
+  backdrop-filter: blur(5px);
+}
+
+.oig-review-content {
+  padding: 32px 36px 30px !important;
+}
+
+.oig-review-brand {
+  align-items: center !important;
+  display: flex !important;
+  gap: 14px !important;
+  margin-bottom: 30px !important;
+}
+
+.oig-review-brand img {
+  border-radius: 13px !important;
+  display: block !important;
+  flex: 0 0 52px !important;
+  height: 52px !important;
+  width: 52px !important;
+}
+
+.oig-review-brand strong {
+  color: var(--oig-review-text) !important;
+  display: block !important;
+  font: 650 15px/22px system-ui, sans-serif !important;
+  letter-spacing: -0.2px !important;
+}
+
+.oig-review-brand span {
+  color: var(--oig-review-muted) !important;
+  display: block !important;
+  font: 400 12px/20px system-ui, sans-serif !important;
+}
+
+.oig-review-prompt h2 {
+  color: var(--oig-review-text) !important;
+  font: 650 29px/37px system-ui, sans-serif !important;
+  letter-spacing: -0.9px !important;
+  margin: 0 0 12px !important;
+}
+
+.oig-review-prompt p {
+  color: var(--oig-review-muted) !important;
+  font: inherit !important;
+  margin: 0 !important;
+}
+
+.oig-review-actions {
+  background: var(--oig-review-footer) !important;
+  border-top: 1px solid var(--oig-review-border) !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  padding: 22px 36px !important;
+}
+
+.oig-review-link,
+.oig-review-dismiss {
+  appearance: none !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  font: 600 14px/22px system-ui, sans-serif !important;
+  padding: 11px 20px !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  transition: background 120ms ease, border-color 120ms ease !important;
+}
+
+.oig-review-link {
+  background: #7052d6 !important;
+  box-shadow: 0 1px 2px #21114626, inset 0 1px 0 #ffffff1a !important;
+  color: #fff !important;
+}
+
+.oig-review-dismiss {
+  background: transparent !important;
+  color: var(--oig-review-muted) !important;
+}
+
+.oig-review-link:hover {
+  background: #6144c5 !important;
+}
+
+.oig-review-dismiss:hover {
+  background: var(--oig-review-bg) !important;
+  border-color: var(--oig-review-border) !important;
+  color: var(--oig-review-text) !important;
+}
+
+.oig-review-link:focus-visible,
+.oig-review-dismiss:focus-visible {
+  outline: 2px solid #9b83ef !important;
+  outline-offset: 3px !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .oig-review-prompt {
+    --oig-review-bg: #1e1c24;
+    --oig-review-footer: #24212c;
+    --oig-review-text: #f4f1fa;
+    --oig-review-muted: #b2acbf;
+    --oig-review-border: #38323f;
+  }
+}
+
 .oig-notice.oig-warn {
   border-color: rgba(255, 167, 38, 0.72) !important;
 }
@@ -465,6 +597,23 @@
 }
 
 @media (max-width: 560px) {
+  .oig-review-content {
+    padding: 28px 24px !important;
+  }
+
+  .oig-review-prompt h2 {
+    font-size: 26px !important;
+    line-height: 33px !important;
+  }
+
+  .oig-review-actions {
+    padding: 20px 24px !important;
+  }
+
+  .oig-review-actions > * {
+    flex: 1 1 auto !important;
+  }
+
   .oig-setting-row {
     align-items: stretch !important;
     flex-direction: column !important;

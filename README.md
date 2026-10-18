@@ -38,6 +38,8 @@ You can optionally pin Open IGDownload from the browser's Extensions menu for qu
 
 ## Use
 
+While you use Instagram, Open IGDownload shows a review modal at most once every seven days, starting on your first visit. **Leave a review** opens the extension's [Chrome Web Store reviews page](https://chromewebstore.google.com/detail/open-igdownload-downloade/hchdkeahjmpahjkncgboenfpgllhnfem/reviews) in a new tab; **Not now** dismisses the modal. The reminder time is stored locally in your browser and persists across restarts.
+
 ### Download a post, Reel, or Story
 
 - On a post, use the download control beside Instagram's **More options** button. A carousel is downloaded in full.

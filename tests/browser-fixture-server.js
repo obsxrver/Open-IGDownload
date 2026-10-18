@@ -14,7 +14,11 @@ const chromeMock = `
         getURL: (resource) => '/' + resource,
         getManifest: () => ({ version: ${JSON.stringify(require("../manifest.json").version)} }),
         lastError: null,
-        sendMessage: (_message, callback) => callback({ ok: true })
+        sendMessage: (message, callback) => callback({
+          ok: true,
+          show: message.type === 'open-igdownload:claim-review-prompt' &&
+            new URLSearchParams(location.search).has('review')
+        })
       },
       storage: {
         onChanged: { addListener: () => undefined },
@@ -88,9 +92,9 @@ function fixture(pathname) {
 http
   .createServer((request, response) => {
     const url = new URL(request.url, `http://${request.headers.host}`);
-    if (url.pathname === "/icons/icon-48.png") {
+    if (["/icons/icon-48.png", "/icons/icon-128.png"].includes(url.pathname)) {
       response.writeHead(200, { "content-type": "image/png" });
-      fs.createReadStream(path.join(root, "icons/icon-48.png")).pipe(response);
+      fs.createReadStream(path.join(root, url.pathname)).pipe(response);
       return;
     }
     if (url.pathname.startsWith("/src/")) {

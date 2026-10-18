@@ -63,7 +63,30 @@
 
   chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
+  const REVIEW_PROMPT_KEY = "reviewPromptLastShownAt";
+  const REVIEW_INTERVAL = 7 * 24 * 60 * 60 * 1000;
+  let reviewPromptQueue = Promise.resolve();
+
+  async function claimReviewPrompt() {
+    const stored = await chrome.storage.local.get(REVIEW_PROMPT_KEY);
+    const lastShown = stored[REVIEW_PROMPT_KEY];
+    const now = Date.now();
+    if (Number.isFinite(lastShown) && now - lastShown < REVIEW_INTERVAL) {
+      return { ok: true, show: false };
+    }
+    // Persist before responding, so simultaneous tabs cannot both show it.
+    await chrome.storage.local.set({ [REVIEW_PROMPT_KEY]: now });
+    return { ok: true, show: true };
+  }
+
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.type === "open-igdownload:claim-review-prompt") {
+      reviewPromptQueue = reviewPromptQueue
+        .then(claimReviewPrompt)
+        .catch(() => ({ ok: false, show: false }));
+      reviewPromptQueue.then(sendResponse);
+      return true;
+    }
     if (!message || message.type !== "open-igdownload:download") return false;
     if (!allowedUrl(message.url)) {
       sendResponse({ ok: false, error: "Unsupported media URL" });

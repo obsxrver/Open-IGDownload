@@ -9,12 +9,14 @@
   const NAVIGATION_EVENT = "open-igdownload:navigation";
   const MEDIA_ID_ATTRIBUTE = "data-open-igdownload-media-id";
   const DIRECTORY_KEY = "download-directory-handle";
+  const REVIEW_URL =
+    "https://chromewebstore.google.com/detail/open-igdownload-downloade/hchdkeahjmpahjkncgboenfpgllhnfem/reviews";
   const DEFAULT_APP_ID = "936619743392459";
   const GRID_LINK_SELECTOR =
     "a[href*='/p/'], a[href*='/reel/'], a[href*='/tv/']";
   const PROFILE_ROW_SELECTOR = "._ac7v";
   const EXTENSION_UI_SELECTOR =
-    ".oig-icon-button, .oig-settings-nav-row, .oig-profile-menu, .oig-story-controls, #oig-notifications, #oig-options-root";
+    ".oig-icon-button, .oig-settings-nav-row, .oig-profile-menu, .oig-story-controls, .oig-review-prompt, #oig-notifications, #oig-options-root";
   const SLIDE_SELECTOR =
     "li.x972fbf.x10w94by.x1qhh985.x14e42zd.xln7xf2.xk390pu.x5yr21d, li:has(> div img), li:has(> div video)";
 
@@ -195,6 +197,77 @@
     requestAnimationFrame(() => element.classList.add("oig-visible"));
     if (timeout) setTimeout(() => removeNotice(element), timeout);
     return element;
+  }
+
+  let reviewPromptPending = false;
+
+  async function maybeShowReviewPrompt() {
+    if (
+      reviewPromptPending || document.visibilityState !== "visible" ||
+      Core.routeFor(location.href) === "options" ||
+      document.querySelector(".oig-review-prompt")
+    ) return;
+    reviewPromptPending = true;
+    try {
+      const response = await sendRuntimeMessage({
+        type: "open-igdownload:claim-review-prompt",
+      });
+      if (!response?.ok || !response.show ||
+          document.visibilityState !== "visible" ||
+          Core.routeFor(location.href) === "options") return;
+      const prompt = document.createElement("dialog");
+      prompt.className = "oig-review-prompt";
+      prompt.setAttribute("aria-labelledby", "oig-review-title");
+      prompt.setAttribute("aria-describedby", "oig-review-description");
+      const brand = document.createElement("div");
+      brand.className = "oig-review-brand";
+      const logo = document.createElement("img");
+      logo.src = chrome.runtime.getURL("icons/icon-128.png");
+      logo.alt = "";
+      logo.width = 52;
+      logo.height = 52;
+      const brandCopy = document.createElement("div");
+      const name = document.createElement("strong");
+      name.textContent = "Open IGDownload";
+      const tagline = document.createElement("span");
+      tagline.textContent = "Free & open source";
+      brandCopy.append(name, tagline);
+      brand.append(logo, brandCopy);
+      const content = document.createElement("div");
+      content.className = "oig-review-content";
+      const title = document.createElement("h2");
+      title.id = "oig-review-title";
+      title.textContent = "Enjoying Open IGDownload?";
+      const description = document.createElement("p");
+      description.id = "oig-review-description";
+      description.textContent = "Support us with a 5-star review.";
+      const actions = document.createElement("div");
+      actions.className = "oig-review-actions";
+      const link = document.createElement("a");
+      link.className = "oig-review-link";
+      link.href = REVIEW_URL;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "Leave a review";
+      link.addEventListener("click", () => prompt.close());
+      const dismiss = document.createElement("button");
+      dismiss.type = "button";
+      dismiss.className = "oig-review-dismiss";
+      dismiss.textContent = "Not now";
+      dismiss.autofocus = true;
+      dismiss.addEventListener("click", () => prompt.close());
+      actions.append(dismiss, link);
+      content.append(brand, title, description);
+      prompt.append(content, actions);
+      prompt.addEventListener("close", () => prompt.remove());
+      document.body.appendChild(prompt);
+      // Native modal behavior traps focus and makes the page behind it inert.
+      prompt.showModal();
+    } catch (_error) {
+      // A review request must never interrupt the downloader.
+    } finally {
+      reviewPromptPending = false;
+    }
   }
 
   function progressNotice(text, { persistent = false } = {}) {
@@ -1148,6 +1221,10 @@
     refreshControls();
     window.addEventListener(NAVIGATION_EVENT, scheduleRefresh);
     window.addEventListener("hashchange", scheduleRefresh);
+    void maybeShowReviewPrompt();
+    document.addEventListener("visibilitychange", maybeShowReviewPrompt);
+    // Also cover Instagram tabs left open continuously for more than a week.
+    setInterval(maybeShowReviewPrompt, 60 * 60 * 1000);
   }
 
   start().catch((error) =>
