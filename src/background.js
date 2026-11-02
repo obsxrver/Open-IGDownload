@@ -64,11 +64,31 @@
   chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
   const REVIEW_PROMPT_KEY = "reviewPromptLastShownAt";
+  const REVIEW_DOWNLOADS_KEY = "reviewPromptSuccessfulDownloads";
+  const REVIEW_MIN_DOWNLOADS = 3;
   const REVIEW_INTERVAL = 7 * 24 * 60 * 60 * 1000;
   let reviewPromptQueue = Promise.resolve();
 
+  async function recordSuccessfulDownload() {
+    const stored = await chrome.storage.local.get(REVIEW_DOWNLOADS_KEY);
+    const count = stored[REVIEW_DOWNLOADS_KEY];
+    await chrome.storage.local.set({
+      [REVIEW_DOWNLOADS_KEY]: Math.min(
+        REVIEW_MIN_DOWNLOADS,
+        (Number.isSafeInteger(count) && count > 0 ? count : 0) + 1,
+      ),
+    });
+    return { ok: true };
+  }
+
   async function claimReviewPrompt() {
-    const stored = await chrome.storage.local.get(REVIEW_PROMPT_KEY);
+    const stored = await chrome.storage.local.get([
+      REVIEW_PROMPT_KEY,
+      REVIEW_DOWNLOADS_KEY,
+    ]);
+    if (!(stored[REVIEW_DOWNLOADS_KEY] >= REVIEW_MIN_DOWNLOADS)) {
+      return { ok: true, show: false };
+    }
     const lastShown = stored[REVIEW_PROMPT_KEY];
     const now = Date.now();
     if (Number.isFinite(lastShown) && now - lastShown < REVIEW_INTERVAL) {
@@ -80,9 +100,12 @@
   }
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    if (message?.type === "open-igdownload:claim-review-prompt") {
+    if (message?.type === "open-igdownload:claim-review-prompt" ||
+        message?.type === "open-igdownload:record-download-success") {
       reviewPromptQueue = reviewPromptQueue
-        .then(claimReviewPrompt)
+        .then(message.type === "open-igdownload:record-download-success"
+          ? recordSuccessfulDownload
+          : claimReviewPrompt)
         .catch(() => ({ ok: false, show: false }));
       reviewPromptQueue.then(sendResponse);
       return true;

@@ -140,13 +140,30 @@
 }
 
 .oig-grid-owner,
-.oig-reel-owner,
+.oig-carousel-owner,
 .oig-avatar-owner {
   position: relative !important;
 }
 
+.oig-carousel-button {
+  background: rgba(0, 0, 0, 0.68) !important;
+  color: #fff !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  padding: 6px !important;
+  position: absolute !important;
+  right: 8px !important;
+  top: 8px !important;
+  width: 32px !important;
+  z-index: 50 !important;
+}
+
+.oig-carousel-button:focus-visible {
+  outline: 2px solid #fff !important;
+  outline-offset: 2px !important;
+}
+
 .oig-grid-button,
-.oig-reel-button,
 .oig-avatar-button {
   background: rgba(0, 0, 0, 0.68) !important;
   color: #fff !important;
@@ -163,8 +180,13 @@
 }
 
 .oig-reel-button {
-  bottom: 18px !important;
-  right: 18px !important;
+  align-self: center !important;
+  flex: 0 0 40px !important;
+}
+
+.oig-reel-button:focus-visible {
+  outline: 2px solid currentColor !important;
+  outline-offset: 2px !important;
 }
 
 .oig-avatar-button {
@@ -174,7 +196,6 @@
 }
 
 .oig-grid-owner:hover > .oig-grid-button,
-.oig-reel-owner:hover > .oig-reel-button,
 .oig-avatar-owner:hover > .oig-avatar-button {
   opacity: 1 !important;
 }
@@ -364,12 +385,12 @@
 }
 
 .oig-review-actions {
+  align-items: center !important;
   background: var(--oig-review-footer) !important;
   border-top: 1px solid var(--oig-review-border) !important;
   display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: flex-end !important;
-  gap: 12px !important;
+  flex-direction: column !important;
+  gap: 8px !important;
   padding: 22px 36px !important;
 }
 
@@ -389,12 +410,18 @@
 .oig-review-link {
   background: #7052d6 !important;
   box-shadow: 0 1px 2px #21114626, inset 0 1px 0 #ffffff1a !important;
+  box-sizing: border-box !important;
   color: #fff !important;
+  font-size: 16px !important;
+  padding: 15px 24px !important;
+  width: 100% !important;
 }
 
 .oig-review-dismiss {
   background: transparent !important;
   color: var(--oig-review-muted) !important;
+  font-size: 12px !important;
+  padding: 6px 12px !important;
 }
 
 .oig-review-link:hover {
@@ -608,10 +635,6 @@
 
   .oig-review-actions {
     padding: 20px 24px !important;
-  }
-
-  .oig-review-actions > * {
-    flex: 1 1 auto !important;
   }
 
   .oig-setting-row {

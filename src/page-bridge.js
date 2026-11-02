@@ -14,11 +14,11 @@
     "xdt_api__v1__feed__user_timeline_graphql_connection";
   const PROFILE_QUERY = Object.freeze({
     initial: Object.freeze({
-      fallbackId: "28534843459473863",
+      fallbackId: "29156678094015645",
       name: "PolarisProfilePostsQuery",
     }),
     next: Object.freeze({
-      fallbackId: "27613079688387576",
+      fallbackId: "28544666141895803",
       name: "PolarisProfilePostsTabContentQuery_connection",
     }),
   });
@@ -199,7 +199,8 @@
       username,
       __relay_internal__pv__PolarisMultiCaptionCarouselEnabledrelayprovider:
         true,
-      __relay_internal__pv__PolarisShortDramaEnabledrelayprovider: false,
+      __relay_internal__pv__PolarisShortDramaEnabledrelayprovider: true,
+      __relay_internal__pv__PolarisSEOIsCrawlerrelayprovider: false,
       __relay_internal__pv__PolarisThreadsStyleCommentsEnabledrelayprovider:
         false,
       __relay_internal__pv__PolarisReelsRecoDebugOverlayEnabledrelayprovider:
@@ -209,7 +210,7 @@
       Object.assign(variables, {
         after,
         before: null,
-        first: 32,
+        first: 12,
         include_multi_captions: true,
         last: null,
       });
@@ -268,7 +269,7 @@
     if (csrfToken) headers["x-csrftoken"] = csrfToken;
     if (lsd) headers["x-fb-lsd"] = lsd;
 
-    const response = await fetch("/graphql/query", {
+    const response = await fetch("/api/graphql", {
       body,
       credentials: "include",
       headers,

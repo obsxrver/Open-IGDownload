@@ -14,6 +14,8 @@
   const DEFAULT_APP_ID = "936619743392459";
   const GRID_LINK_SELECTOR =
     "a[href*='/p/'], a[href*='/reel/'], a[href*='/tv/']";
+  // Profile Reels use background-image covers instead of image/video elements.
+  const GRID_MEDIA_SELECTOR = "img, video, [style*='background-image']";
   const PROFILE_ROW_SELECTOR = "._ac7v";
   const EXTENSION_UI_SELECTOR =
     ".oig-icon-button, .oig-settings-nav-row, .oig-profile-menu, .oig-story-controls, .oig-review-prompt, #oig-notifications, #oig-options-root";
@@ -200,10 +202,42 @@
   }
 
   let reviewPromptPending = false;
+  let reviewPromptReady = false;
+  let reviewPromptTimer = null;
+  let activeDownloads = 0;
+
+  function beginDownload() {
+    activeDownloads += 1;
+    reviewPromptReady = false;
+    clearTimeout(reviewPromptTimer);
+  }
+
+  async function finishDownload(successful) {
+    try {
+      if (successful) {
+        const response = await sendRuntimeMessage({
+          type: "open-igdownload:record-download-success",
+        });
+        if (response?.ok) reviewPromptReady = true;
+      }
+    } catch (_error) {
+      // Review reminders must never affect a completed download.
+    } finally {
+      activeDownloads -= 1;
+      if (!activeDownloads && reviewPromptReady) scheduleReviewPrompt();
+    }
+  }
+
+  function scheduleReviewPrompt() {
+    clearTimeout(reviewPromptTimer);
+    // Give the download confirmation a moment before asking for feedback.
+    reviewPromptTimer = setTimeout(maybeShowReviewPrompt, 1_500);
+  }
 
   async function maybeShowReviewPrompt() {
     if (
-      reviewPromptPending || document.visibilityState !== "visible" ||
+      !reviewPromptReady || activeDownloads || reviewPromptPending ||
+      document.visibilityState !== "visible" ||
       Core.routeFor(location.href) === "options" ||
       document.querySelector(".oig-review-prompt")
     ) return;
@@ -212,9 +246,12 @@
       const response = await sendRuntimeMessage({
         type: "open-igdownload:claim-review-prompt",
       });
-      if (!response?.ok || !response.show ||
+      if (!response?.ok) return;
+      if (activeDownloads ||
           document.visibilityState !== "visible" ||
           Core.routeFor(location.href) === "options") return;
+      reviewPromptReady = false;
+      if (!response.show) return;
       const prompt = document.createElement("dialog");
       prompt.className = "oig-review-prompt";
       prompt.setAttribute("aria-labelledby", "oig-review-title");
@@ -237,10 +274,10 @@
       content.className = "oig-review-content";
       const title = document.createElement("h2");
       title.id = "oig-review-title";
-      title.textContent = "Enjoying Open IGDownload?";
+      title.textContent = "Finding Open IGDownload useful?";
       const description = document.createElement("p");
       description.id = "oig-review-description";
-      description.textContent = "Support us with a 5-star review.";
+      description.textContent = "I built Open IGDownload to make saving media simple, free, and open source. Share your experience in a review to help other people discover it.";
       const actions = document.createElement("div");
       actions.className = "oig-review-actions";
       const link = document.createElement("a");
@@ -256,7 +293,7 @@
       dismiss.textContent = "Not now";
       dismiss.autofocus = true;
       dismiss.addEventListener("click", () => prompt.close());
-      actions.append(dismiss, link);
+      actions.append(link, dismiss);
       content.append(brand, title, description);
       prompt.append(content, actions);
       prompt.addEventListener("close", () => prompt.remove());
@@ -388,7 +425,9 @@
 
   function domMediaFallback(element) {
     const container = element?.closest?.("article") || element || document;
-    const video = container.querySelector?.("video");
+    const video = container.matches?.("video")
+      ? container
+      : container.querySelector?.("video");
     const images = [...(container.querySelectorAll?.("img") || [])].filter(
       (image) => image.naturalWidth >= 300 || image.clientWidth >= 300,
     );
@@ -477,6 +516,8 @@
     const validItems = items.filter((item) => item?.url);
     if (!validItems.length) throw new Error("No downloadable media was found");
     const progress = progressNotice(`${label}…`);
+    beginDownload();
+    let successful = false;
     let completed = 0;
     try {
       for (const item of validItems) {
@@ -491,9 +532,12 @@
       progress.finish(
         `${completed.toLocaleString()} ${completed === 1 ? "file" : "files"} downloaded.`,
       );
+      successful = true;
     } catch (error) {
       progress.fail(error?.message || "Download failed");
       throw error;
+    } finally {
+      await finishDownload(successful);
     }
   }
 
@@ -562,6 +606,55 @@
     });
   }
 
+  function carouselImageItem(image) {
+    // Resolve at click time: Instagram can reuse a slide as the carousel moves.
+    const candidates = [...(image.srcset || "").matchAll(/(\S+)\s+(\d+(?:\.\d+)?)(w|x)(?:\s*,|\s*$)/g)];
+    candidates.sort((left, right) => Number(right[2]) - Number(left[2]));
+    const url = candidates[0]?.[1] || image.currentSrc || image.src;
+    if (!url || !Core.isAllowedMediaUrl(url)) {
+      throw new Error("Could not find a downloadable image");
+    }
+    // The annotation on an image can identify the parent post, so use the
+    // image's own filename to keep different carousel downloads distinct.
+    const id = new URL(url).pathname.split("/").pop().replace(/\.[^.]+$/, "");
+    return {
+      id,
+      pk: id,
+      takenAt: 0,
+      username: usernameFromElement(image.closest("article") || image.closest("main")),
+      mediaType: "image",
+      url,
+    };
+  }
+
+  function addCarouselImageButtons() {
+    if (state.route === "story") return;
+    document.querySelectorAll(SLIDE_SELECTOR).forEach((slide) => {
+      // Story avatars use the same list classes as post carousels.
+      const image = slide.querySelector("img");
+      if (!image || slide.querySelector("video") ||
+          image.closest("a[href*='/stories/']") ||
+          /profile picture/i.test(image.alt || "") ||
+          !(image.clientWidth >= 180 || image.naturalWidth >= 300)) return;
+      const owner = image.parentElement;
+      if (!owner || owner.querySelector(":scope > .oig-carousel-button")) return;
+      owner.classList.add("oig-carousel-owner");
+      const button = createIconButton("Download this image", {
+        className: "oig-carousel-button",
+      });
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        runButtonTask(button, () => downloadItems([carouselImageItem(image)]));
+      });
+      button.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      owner.appendChild(button);
+    });
+  }
+
   function addGridButtons(root = document) {
     if (!root) return;
     const anchors = root.querySelectorAll(
@@ -576,7 +669,7 @@
       ) {
         return;
       }
-      const media = anchor.querySelector("img, video");
+      const media = anchor.querySelector(GRID_MEDIA_SELECTOR);
       if (!media) return;
       anchor.classList.add("oig-grid-owner");
       const button = createIconButton("Download this post", {
@@ -637,18 +730,38 @@
   function addReelButtons() {
     if (state.route !== "reels-feed") return;
     document.querySelectorAll("main video").forEach((video) => {
-      const owner = video.parentElement;
+      // Player overlays cover controls inside the video wrapper. Find this
+      // Reel's action column without crossing into another feed item.
+      let reel = video.parentElement;
+      let more = null;
+      while (reel && !reel.matches("main")) {
+        if (reel.querySelectorAll("video").length !== 1) break;
+        more = reel.querySelector("svg[aria-label='More'], svg[aria-label='More options']")
+          ?.closest("button, [role='button']");
+        if (more) break;
+        reel = reel.parentElement;
+      }
+      const actionRow = more?.parentElement;
+      const owner = actionRow?.parentElement;
       if (!owner || owner.querySelector(":scope > .oig-reel-button")) return;
-      owner.classList.add("oig-reel-owner");
       const button = createIconButton("Download this Reel", {
         className: "oig-reel-button",
       });
       button.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
-        runButtonTask(button, () => downloadPost(video));
+        // Feed items may be recycled, so resolve the player at click time.
+        const currentVideo = reel.querySelector("video");
+        if (!currentVideo) return;
+        // The bridge may annotate the poster beside the video, rather than
+        // the video itself. Keep the lookup inside this player's wrapper.
+        let media = currentVideo;
+        while (media !== reel && !mediaIdentity(media).id) {
+          media = media.parentElement;
+        }
+        runButtonTask(button, () => downloadPost(media));
       });
-      owner.appendChild(button);
+      owner.insertBefore(button, actionRow);
     });
   }
 
@@ -805,6 +918,8 @@
     const progress = progressNotice(`Finding ${username}'s media…`, {
       persistent: true,
     });
+    beginDownload();
+    let successful = false;
     try {
       const { account, items: allItems } = await collectProfileMedia(
         username,
@@ -822,9 +937,12 @@
       const result = await writeProfileMedia(root, account, items, progress);
       const summary = `${result.downloaded.toLocaleString()} new, ${result.skipped.toLocaleString()} skipped${result.failed ? `, ${result.failed.toLocaleString()} failed` : ""}.`;
       progress.finish(`Saved to ${root.name}/${account.username}. ${summary}`);
+      successful = result.downloaded > 0 && result.failed === 0;
     } catch (error) {
       progress.fail(error?.message || "Profile download failed");
       throw error;
+    } finally {
+      await finishDownload(successful);
     }
   }
 
@@ -1024,6 +1142,7 @@
     removeRouteSpecificControls();
     addSettingsButtons();
     addPostButtons();
+    addCarouselImageButtons();
     if (!observesProfileGrid) addGridButtons();
     addReelButtons();
     addProfileMenu();
@@ -1064,8 +1183,8 @@
           const row = record.target.closest?.(PROFILE_ROW_SELECTOR);
           if (row && [...record.addedNodes].some((node) =>
             node instanceof Element &&
-            (node.matches(`img, video, ${GRID_LINK_SELECTOR}`) ||
-              node.querySelector(`img, video, ${GRID_LINK_SELECTOR}`)),
+            (node.matches(`${GRID_MEDIA_SELECTOR}, ${GRID_LINK_SELECTOR}`) ||
+              node.querySelector(`${GRID_MEDIA_SELECTOR}, ${GRID_LINK_SELECTOR}`)),
           )) {
             rows.add(row);
           }
@@ -1219,12 +1338,14 @@
     installKeyboardShortcut();
     installObserver();
     refreshControls();
+    document.addEventListener("load", (event) => {
+      if (event.target instanceof HTMLImageElement && event.target.closest(SLIDE_SELECTOR)) {
+        scheduleRefresh();
+      }
+    }, true);
     window.addEventListener(NAVIGATION_EVENT, scheduleRefresh);
     window.addEventListener("hashchange", scheduleRefresh);
-    void maybeShowReviewPrompt();
-    document.addEventListener("visibilitychange", maybeShowReviewPrompt);
-    // Also cover Instagram tabs left open continuously for more than a week.
-    setInterval(maybeShowReviewPrompt, 60 * 60 * 1000);
+    document.addEventListener("visibilitychange", scheduleReviewPrompt);
   }
 
   start().catch((error) =>

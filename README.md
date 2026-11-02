@@ -14,8 +14,6 @@ Unlike many similar download extensions and services, Open IGDownload has **no t
 - All images or all videos from a profile
 - A profile picture
 
-Open IGDownload shows discovery, queue, and export progress directly on the Instagram page. During profile exports, files that already exist are skipped so an interrupted export can be restarted.
-
 ## Install
 
 Install Open IGDownload from the [Chrome Web Store](https://chromewebstore.google.com/detail/open-igdownload-downloade/hchdkeahjmpahjkncgboenfpgllhnfem).
@@ -38,12 +36,11 @@ You can optionally pin Open IGDownload from the browser's Extensions menu for qu
 
 ## Use
 
-While you use Instagram, Open IGDownload shows a review modal at most once every seven days, starting on your first visit. **Leave a review** opens the extension's [Chrome Web Store reviews page](https://chromewebstore.google.com/detail/open-igdownload-downloade/hchdkeahjmpahjkncgboenfpgllhnfem/reviews) in a new tab; **Not now** dismisses the modal. The reminder time is stored locally in your browser and persists across restarts.
-
 ### Download a post, Reel, or Story
 
 - On a post, use the download control beside Instagram's **More options** button. A carousel is downloaded in full.
 - On profile, Explore, Saved, Tagged, and Reel grids, hover over a tile and select its download control.
+- In the Reels feed, use the download button above **More** in the action column beside the video.
 - In the Story viewer, use the controls near the top-right to download the current Story or all available Stories.
 - Use `Ctrl+Shift+D` on Windows/Linux or `Cmd+Shift+D` on macOS to download the current post or Story.
 
